@@ -1,0 +1,20 @@
+{
+    "name": "ashraf/wp-sm-api",
+    "scripts": {
+        "build": [
+            "composer --no-plugins --no-interaction install --no-scripts --no-dev"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "WP_SM_API\\App\\": "app/",
+            "WP_SM_API\\Model\\": "model/",
+            "WP_SM_API\\Controller\\": "controller/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
+    }
+}
