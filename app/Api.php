@@ -1,6 +1,6 @@
 <?php 
 namespace WP_SM_API\App;
-
+use Rakit\Validation\Validator;
 abstract class Api {
     abstract protected function getNamespace();
     public $param = '';
@@ -9,8 +9,11 @@ abstract class Api {
      * @var \WP_REST_Request
      */
     public $request;
+    protected $validator;
 
     public function __construct() {
+        $this->validator = new Validator;
+
         add_action(
             'rest_api_init', function () {
                 register_rest_route(
@@ -39,6 +42,7 @@ abstract class Api {
         $action_class  = strtolower( $this->request->get_method() ) . '_' . sanitize_key( $this->request['action'] );
 
         if ( method_exists( $this, $action_class ) ) {
+            unset($this->request['action']);
             return $this->{$action_class}();
         }
     }

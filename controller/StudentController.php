@@ -11,26 +11,28 @@ class StudentController extends Api
      * get list of students 
      */ 
     public function get_list() {
-        $data = array(
-            'name' => 'John',
-            'email' => 'john@example.com',
-            'age' => 30
-        );
-    
-        return new WP_REST_Response($data, 200);
+        $posts = $this->find();
+        return new WP_REST_Response($posts, 200);
     }
     /**
      * create a student
     */
     public function post_create() {
         $params = $this->request->get_params();
+        
+        $validation = $this->validator->validate($params, [
+            'name' => 'required',
+            'email' => 'required|email',
+            'age' => 'required|numeric',
+        ]);
 
-        $response = [
-            'name' => $params['name'],
-            'email' => $params['email'],
-            'age' => $params['age']
-        ];
-
-        return new WP_REST_Response($response, 200);
+        if ($validation->fails()) {
+            $errors = $validation->errors();
+            return new WP_REST_Response($errors->firstOfAll(), 400);
+        } else {
+            $id = $this->create($params);
+            $params['id'] = $id;
+            return new WP_REST_Response($params, 200);
+        }
     }
 }
