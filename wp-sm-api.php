@@ -16,6 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // add autoload
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require_once __DIR__ . '/vendor/autoload.php';
+    require_once( ABSPATH . 'wp-admin/includes/image.php' );
+	require_once( ABSPATH . 'wp-admin/includes/file.php' );
+	require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
     new StudentController();
 }
