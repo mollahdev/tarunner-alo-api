@@ -1,5 +1,7 @@
 <?php 
 namespace WP_SM_API\Model;
+use WP_SM_API\App\Singleton;
+
 /**
  * Model for student
  * This trait is used in StudentController, so we can use the methods in StudentController
@@ -11,88 +13,71 @@ namespace WP_SM_API\Model;
  * @see WP_SM_API\Controller\StudentController
  */ 
 
-trait StudentModel
+class StudentModel
 {
-    protected function getNamespace() {
-        return 'student/v1';
-    }
-
-    private function getPostType() {
+    use Singleton;
+    private static function get_post_type() {
         return 'wp_sm_api_student';
     }
-
     /**
      * take student data and save into database
      * @return {string} 
      */ 
-    protected function create($params) {
+    static function create($params) {
         $post = array(
             'post_status' => 'publish',
-            'post_type' => $this->getPostType(),
+            'post_type' => self::get_post_type(),
             'meta_input' => $params
         );
     
         return wp_insert_post($post);
     }
-
     /**
      * get list of students 
      * @param {array} $ids
      * @return {array}
      */ 
-    protected function find( $ids = [] ) {
+    static function find( $ids = [] ) {
+        $args = array(
+            'post__in' => $ids,
+            'post_type' => self::get_post_type(),
+            'post_status' => 'any',
+            'posts_per_page' => -1
+        );
+        
+        $posts = get_posts($args);
         $data = [];
-        /**
-         * if $ids is empty, get all students
-         * else get students by ids 
-         */ 
-        if (empty($ids)) {
-            $posts = get_posts([
-                'post_type' => $this->getPostType(),
-                'post_status' => 'any',
-                'posts_per_page' => -1
-            ]);
 
-            foreach ($posts as $post) {
-                $data[] = $this->getMetaInfo($post->ID);
-            }
-        } else {
-            foreach ($ids as $id) {
-                $meta = get_post_meta($id);
-                // if student not found, skip
-                if( empty($meta) ) continue;
-                $data[] = $this->getMetaInfo($id);
-            }
+        foreach ($posts as $post) {
+            $data[] = self::get_meta_info($post->ID);
         }
-
         return $data;
-
     }
 
-    private function getMetaInfo( $id ) {
+    private static function get_meta_info( $id ) {
         $meta = get_post_meta($id);
         return [
             'id'                => $id,
-            'first_name'        => $this->validateValue($meta, 'first_name'),
-            'last_name'         => $this->validateValue($meta, 'last_name'),
-            'gender'            => $this->validateValue($meta, 'gender'),
-            'date_of_birth'     => $this->validateValue($meta, 'date_of_birth'),
-            'email'             => $this->validateValue($meta, 'email'),
-            'mobile'            => $this->validateValue($meta, 'mobile'),
-            'country_code'      => $this->validateValue($meta, 'country_code'),
-            'is_student'        => $this->validateValue($meta, 'is_student'),
-            'institution_type'  => $this->validateValue($meta, 'institution_type'),
-            'class'             => $this->validateValue($meta, 'class'),
-            'group'             => $this->validateValue($meta, 'group'),
-            'subject'           => $this->validateValue($meta, 'subject'),
-            'avatar'            => wp_get_attachment_url($this->validateValue($meta, 'avatar', 0)),
-            'course_id'         => $this->validateValue($meta, 'course_id'),
-            'status'            => $this->validateValue($meta, 'status'),
-            'is_onboarding_completed' => $this->validateValue($meta, 'is_onboarding_completed'),
+            'first_name'        => self::validateValue($meta, 'first_name'),
+            'last_name'         => self::validateValue($meta, 'last_name'),
+            'gender'            => self::validateValue($meta, 'gender'),
+            'date_of_birth'     => self::validateValue($meta, 'date_of_birth'),
+            'email'             => self::validateValue($meta, 'email'),
+            'mobile'            => self::validateValue($meta, 'mobile'),
+            'country_code'      => self::validateValue($meta, 'country_code'),
+            'is_student'        => self::validateValue($meta, 'is_student'),
+            'institution_type'  => self::validateValue($meta, 'institution_type'),
+            'class'             => self::validateValue($meta, 'class'),
+            'group'             => self::validateValue($meta, 'group'),
+            'subject'           => self::validateValue($meta, 'subject'),
+            'avatar'            => wp_get_attachment_url(self::validateValue($meta, 'avatar', 0)),
+            'courses'           => json_decode(self::validateValue($meta, 'courses', []), true),
+            'status'            => self::validateValue($meta, 'status'),
+            'is_onboarding_completed' => self::validateValue($meta, 'is_onboarding_completed')
         ];
     }
 
-    private function validateValue( $meta, $key, $default = null ) {
+    private static function validateValue( $meta, $key, $default = null ) {
         if( isset($meta[$key]) && !empty($meta[$key]) ) {
             return $meta[$key][0];
         } else {
@@ -100,9 +85,8 @@ trait StudentModel
         }
     }
 
-    protected function deleteAll( $ids = [] ) {
-        $posts = $this->find( $ids );
-
+    static function delete_all( $ids = [] ) {
+        $posts = self::find( $ids );
         foreach ($posts as $post) {
             // get attachment id of avatar
             $attachment_id = get_post_meta($post['id'], 'avatar', true);
@@ -115,9 +99,9 @@ trait StudentModel
         return $posts;
     }
 
-    protected function isEmailExists( $email ) {
+    static function is_email_exists( $email ) {
         $posts = get_posts([
-            'post_type' => $this->getPostType(),
+            'post_type' => self::get_post_type(),
             'post_status' => 'any',
             'meta_query' => [
                 [

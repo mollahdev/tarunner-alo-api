@@ -1,68 +1,116 @@
 <?php 
 namespace WP_SM_API\Controller;
 use WP_SM_API\Model\StudentModel;
+use Rakit\Validation\Validator;
 use WP_SM_API\App\Api;
 use WP_REST_Response;
+use WP_REST_Server;
+use WP_SM_API\App\Singleton;
+use stdClass;
 
 class StudentController extends Api
 {
-    use StudentModel;
+    use Singleton;
+    public function __construct()
+    {
+        $this->validator = new Validator;
+        $this->empty_object = new stdClass();
+        $this->prefix = 'student';
+        // get all students
+        $this->route( WP_REST_Server::READABLE, '/', 'all_student_list', 'wp_get_current_user' );
+        // delete all students
+        $this->route( WP_REST_Server::DELETABLE, '/', 'delete_all_students', 'wp_get_current_user' );
+        // get individual student details by id
+        $this->route( WP_REST_Server::READABLE, '/(?P<id>\w+)/', 'get_student_by_id', 'wp_get_current_user' );
+        // delete students by ids
+        $this->route( WP_REST_Server::EDITABLE, '/delete', 'delete_studets_by_ids', 'wp_get_current_user' );
+        // register a student
+        $this->route( WP_REST_Server::EDITABLE, '/register', 'register_student', 'wp_get_current_user' );
+    }
     /**
-     * get list of students 
+     * get all students 
+     * @method GET
+     * @example /wp-json/wp-sm-api/$namespace
      */ 
-    public function get_list() {
-        $posts = $this->find();
-        return new WP_REST_Response($posts, 200);
+    public function all_student_list() {
+        $posts = StudentModel::find();
+        return new WP_REST_Response( $posts, 200);
+    }
+    /**
+     * get student details by id
+     * @method GET
+     * @param {int} $id
+     * @example /wp-json/wp-sm-api/$namespace/1 
+     */ 
+    public function get_student_by_id() {
+        $params = $this->request->get_params();
+        $validation = $this->validator->validate($params, [
+            'id' => 'required|numeric',
+        ]);
+
+        if ($validation->fails()) {
+            $errors = $validation->errors();
+            return new WP_REST_Response($errors->firstOfAll(), 400);
+        }
+
+        $posts = StudentModel::find( [$params['id']] );
+        return new WP_REST_Response(empty($posts) ? $this->empty_object : $posts[0], 200);
     }
     /**
      * delete all students
+     * @method DELETE
+     * @example /wp-json/wp-sm-api/$namespace
      */
-    public function delete_all() {
-        $posts = $this->deleteAll();
-        return new WP_REST_Response($posts, 200);
+    public function delete_all_students() {
+        $posts = StudentModel::delete_all();
+        return new WP_REST_Response($posts , 200);
     }
     /**
-     * delete by id
+     * delete students by ids
+     * @method POST
+     * @param {array} $ids
+     * @example /wp-json/wp-sm-api/$namespace/delete
      */
-    public function delete_list() {
+    public function delete_studets_by_ids() {
         $params = $this->request->get_params();
-
-        $validation = $this->validator->validate($params + $_FILES, [
-            'ids' => 'required|array',
+        $validation = $this->validator->validate($params, [
+            'ids' => 'required',
         ]);
 
         if ($validation->fails()) {
             $errors = $validation->errors();
             return new WP_REST_Response($errors->firstOfAll(), 400);
-        } 
+        }
 
-        $posts = $this->deleteAll( $params['ids'] );
-        return new WP_REST_Response($posts, 200);
+        //form data coma separated string to array
+        $ids = explode(',', $params['ids']);
+
+        if( !is_array($ids) ) {
+            return new WP_REST_Response(['ids' => 'ids must be an array'], 400);
+        }
+
+        $posts = StudentModel::delete_all( $ids );
+        return new WP_REST_Response($posts , 200);
     }
+
     /**
-     * create a student
+     * register a student
+     * @method POST
+     * @example /wp-json/wp-sm-api/$namespace/register
     */
-    public function post_register() {
+    public function register_student() {
         $params = $this->request->get_params();
         $params['status'] = 'pending';
         $params['is_onboarding_completed'] = 'no';
-        $params['random_token'] = rand(100000, 999999);
 
-        $validation = $this->validator->validate($params + $_FILES, [
+        $validation = $this->validator->validate($params, [
             'first_name'        => 'required',
             'last_name'         => 'required',
-            'gender'            => 'required|in:male,female',
-            'date_of_birth'     => 'required|date:d-m-Y',
             'email'             => 'required|email',
             'mobile'            => 'required|numeric|digits:10',
             'country_code'      => 'required',
-            'is_student'        => 'required|in:yes,no',
-            'institution_type'  => 'required|in:school,college,madrasah,university',
-            'class'             => 'required|in:1,2,3,4,5,6,7,8,9,10,11,12,honours,masters,degree',
-            'group'             => 'in:science,humanities,commerce,general',
-            'subject'           => 'present',
-            'avatar'            => 'required|uploaded_file|max:1M|mimes:jpeg,png,webp',
             'course_id'         => 'required|numeric',
+            'payment_id'        => 'required|numeric',
         ]);
 
         if ($validation->fails()) {
@@ -70,31 +118,29 @@ class StudentController extends Api
             return new WP_REST_Response($errors->firstOfAll(), 400);
         } 
 
-        if( $this->isEmailExists( $params['email'] ) ) {
+        if( StudentModel::is_email_exists( $params['email'] ) ) {
             return new WP_REST_Response(['email' => 'Email already exists'], 400);
         }
 
-        // upload the file in wordpress media
-        
-        $id = $this->create($params);
+        $course_id = $params['course_id'];
+
+        // group course details
+        $params['courses'] = json_encode([
+            $course_id => [
+                'course_id'     => $course_id,
+                'payment_id'    => $params['payment_id'],
+                'batch_id'      => null,
+                'status'        => 'pending',
+                'created_at'    => date('d-m-Y'),
+            ]
+        ]);
+
+        unset($params['course_id']);
+        unset($params['payment_id']);
+
+        $id = StudentModel::create($params);
         $params['id'] = $id;
-        $attachment_id = media_handle_upload('avatar', $id);
-        
-        if (is_wp_error($attachment_id)) {
-            //delete post
-            wp_delete_post($id);
-            return new WP_REST_Response($attachment_id->get_error_message(), 400);
-        }
-
-        // update post meta
-        update_post_meta($id, 'avatar', $attachment_id);
-        
-        // get image url
-        $params['avatar'] = wp_get_attachment_url($attachment_id);
-
-        // delete random_token
-        unset($params['random_token']);
-
+        $params['courses'] = json_decode($params['courses'], true);
         return new WP_REST_Response($params, 200);
     }
 }
