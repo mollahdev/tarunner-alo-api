@@ -16,6 +16,8 @@ use WP_SM_API\App\Singleton;
 class StudentModel
 {
     use Singleton;
+    public static $empty_object;
+
     private static function get_post_type() {
         return 'wp_sm_api_student';
     }
@@ -71,7 +73,7 @@ class StudentModel
             'group'             => self::validateValue($meta, 'group'),
             'subject'           => self::validateValue($meta, 'subject'),
             'avatar'            => wp_get_attachment_url(self::validateValue($meta, 'avatar', 0)),
-            'courses'           => json_decode(self::validateValue($meta, 'courses', []), true),
+            'services'           => json_decode(self::validateValue($meta, 'services'), true),
             'status'            => self::validateValue($meta, 'status'),
             'is_onboarding_completed' => self::validateValue($meta, 'is_onboarding_completed')
         ];

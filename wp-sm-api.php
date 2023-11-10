@@ -19,6 +19,9 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/image.php' );
 	require_once( ABSPATH . 'wp-admin/includes/file.php' );
 	require_once( ABSPATH . 'wp-admin/includes/media.php' );
+    
+    // add time zone to dhaka
+    date_default_timezone_set('Asia/Dhaka');
 
     new StudentController();
 }

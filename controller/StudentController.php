@@ -109,7 +109,7 @@ class StudentController extends Api
             'email'             => 'required|email',
             'mobile'            => 'required|numeric|digits:10',
             'country_code'      => 'required',
-            'course_id'         => 'required|numeric',
+            'service_id'         => 'required|numeric',
             'payment_id'        => 'required|numeric',
         ]);
 
@@ -122,12 +122,12 @@ class StudentController extends Api
             return new WP_REST_Response(['email' => 'Email already exists'], 400);
         }
 
-        $course_id = $params['course_id'];
+        $service_id = $params['service_id'];
 
         // group course details
-        $params['courses'] = json_encode([
-            $course_id => [
-                'course_id'     => $course_id,
+        $params['services'] = json_encode([
+            $service_id => [
+                'service_id'    => $service_id,
                 'payment_id'    => $params['payment_id'],
                 'batch_id'      => null,
                 'status'        => 'pending',
@@ -135,12 +135,12 @@ class StudentController extends Api
             ]
         ]);
 
-        unset($params['course_id']);
+        unset($params['service_id']);
         unset($params['payment_id']);
 
         $id = StudentModel::create($params);
         $params['id'] = $id;
-        $params['courses'] = json_decode($params['courses'], true);
+        $params['services'] = json_decode($params['services'], true);
         return new WP_REST_Response($params, 200);
     }
 }
