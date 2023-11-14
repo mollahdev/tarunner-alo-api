@@ -2,21 +2,9 @@
 namespace WP_SM_API\Model;
 use WP_SM_API\App\Singleton;
 
-/**
- * Model for student
- * This trait is used in StudentController, so we can use the methods in StudentController
- * Communicate with database to save and get data
- * 
- * @package WP_SM_API\Model
- * @since 1.0.0
- * @version 1.0.0
- * @see WP_SM_API\Controller\StudentController
- */ 
-
 class StudentModel
 {
     use Singleton;
-    public static $empty_object;
 
     private static function get_post_type() {
         return 'wp_sm_api_student';

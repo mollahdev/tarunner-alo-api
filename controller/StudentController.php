@@ -13,26 +13,29 @@ class StudentController extends Api
     use Singleton;
     public function __construct()
     {
-        $this->validator = new Validator;
-        $this->empty_object = new stdClass();
         $this->prefix = 'student';
-        // get all students
-        $this->route( WP_REST_Server::READABLE, '/', 'all_student_list', 'wp_get_current_user' );
-        // delete all students
-        $this->route( WP_REST_Server::DELETABLE, '/', 'delete_all_students', 'wp_get_current_user' );
-        // get individual student details by id
-        $this->route( WP_REST_Server::READABLE, '/(?P<id>\w+)/', 'get_student_by_id', 'wp_get_current_user' );
-        // delete students by ids
-        $this->route( WP_REST_Server::EDITABLE, '/delete', 'delete_studets_by_ids', 'wp_get_current_user' );
-        // register a student
-        $this->route( WP_REST_Server::EDITABLE, '/register', 'register_student', 'wp_get_current_user' );
     }
+
+    function manage_routes()
+    {
+         // get all students
+         $this->route( WP_REST_Server::READABLE, '/', 'get_students', 'wp_get_current_user' );
+         // register a student
+         $this->route( WP_REST_Server::EDITABLE, '/', 'post_register', 'wp_get_current_user' );
+         // delete all students
+         $this->route( WP_REST_Server::DELETABLE, '/', 'delete_students', 'wp_get_current_user' );
+         // get individual student details by id
+         $this->route( WP_REST_Server::READABLE, '/(?P<id>\w+)/', 'get_student', 'wp_get_current_user' );
+         // delete students by ids
+         $this->route( WP_REST_Server::EDITABLE, '/delete', 'post_delete_student', 'wp_get_current_user' );
+    }
+
     /**
      * get all students 
      * @method GET
      * @example /wp-json/wp-sm-api/$namespace
      */ 
-    public function all_student_list() {
+    public function get_students() {
         $posts = StudentModel::find();
         return new WP_REST_Response( $posts, 200);
     }
@@ -42,7 +45,7 @@ class StudentController extends Api
      * @param {int} $id
      * @example /wp-json/wp-sm-api/$namespace/1 
      */ 
-    public function get_student_by_id() {
+    public function get_student() {
         $params = $this->request->get_params();
         $validation = $this->validator->validate($params, [
             'id' => 'required|numeric',
@@ -61,7 +64,7 @@ class StudentController extends Api
      * @method DELETE
      * @example /wp-json/wp-sm-api/$namespace
      */
-    public function delete_all_students() {
+    public function delete_students() {
         $posts = StudentModel::delete_all();
         return new WP_REST_Response($posts , 200);
     }
@@ -71,7 +74,7 @@ class StudentController extends Api
      * @param {array} $ids
      * @example /wp-json/wp-sm-api/$namespace/delete
      */
-    public function delete_studets_by_ids() {
+    public function post_delete_student() {
         $params = $this->request->get_params();
         $validation = $this->validator->validate($params, [
             'ids' => 'required',
@@ -98,7 +101,7 @@ class StudentController extends Api
      * @method POST
      * @example /wp-json/wp-sm-api/$namespace/register
     */
-    public function register_student() {
+    public function post_register() {
         $params = $this->request->get_params();
         $params['status'] = 'pending';
         $params['is_onboarding_completed'] = 'no';
