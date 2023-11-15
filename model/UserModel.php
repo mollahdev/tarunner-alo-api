@@ -32,6 +32,9 @@ class UserModel extends BaseModel
         // generate username
         $params['username'] = Helper::generate_username($params['first_name'], $params['last_name']);
 
+        //random number of 6 digits
+        $random = rand(100000, 999999);
+
         // insert user
         $id = wp_insert_user([
             'first_name'    => $params['first_name'],
@@ -40,7 +43,7 @@ class UserModel extends BaseModel
             'user_pass'     => $params['password'],
             'role'          => $params['role'],
             'user_login'    => $params['username'],
-            'user_activation_key' => 'first_time',
+            'user_activation_key' => $random,
             'meta_input'    => [
                 'student_id'    => $params['student_id'],
                 'teacher_id'    => $params['teacher_id'],
@@ -48,6 +51,7 @@ class UserModel extends BaseModel
                 'phone'         => $params['phone'],
                 'country_code'  => $params['country_code'],
                 'date_of_birth' => $params['date_of_birth'],
+                'is_email_verified' => 'no',
                 'avatar'        => null,
             ] 
         ]);

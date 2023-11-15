@@ -1,6 +1,7 @@
 <?php 
 namespace WP_SM_API\App;
 
+use Error;
 use WP_SM_API\App\Constants;
 use Rakit\Validation\Validator;
 use Firebase\JWT\Key;
@@ -74,6 +75,11 @@ abstract class Api {
         return $expOk && $issOk && $userExists;
     }
 
+    private function is_email_verified( $id ) {
+        $meta = get_user_meta($id, 'is_email_verified', true);
+        return $meta == 'yes';
+    }
+
     public function access_admin( $request ) {
         $data = $this->extract_token( $request );
         if( is_wp_error($data) ) {
@@ -81,6 +87,10 @@ abstract class Api {
         }
 
         $roleOk = $data->role == 'administrator' || $data->role == 'admin';
+        if( !$this->is_email_verified( $data->user_id ) ) {
+            return new \WP_Error('rest_forbidden', __('You must verify your email to access this endpoint.'), array('status' => 401));
+        }
+
         return $roleOk && $this->is_token_valid( $data, $request );
     }
 }

@@ -7,26 +7,32 @@ use WP_REST_Server;
 use WP_SM_API\App\Singleton;
 use WP_SM_API\App\Constants;
 use Firebase\JWT\JWT;
+use WP_SM_API\Providers\Email\Mail;
+use WP_SM_API\Providers\Email\Template;
 
 class UserController extends Api
 {
     use Singleton;
     private $user_model = null;
+    private $mail = null;
 
     public function __construct()
     {
         $this->prefix = 'user';
         $this->user_model = new UserModel();
+        $this->mail = new Mail();
 
         parent::__construct();
     }
 
     function manage_routes()
     {
-         // create user
-         $this->route( WP_REST_Server::EDITABLE, '/register', 'post_create' );
-         // login user
-         $this->route( WP_REST_Server::EDITABLE, '/login', 'post_login' );
+        // create user
+        $this->route( WP_REST_Server::EDITABLE, '/register', 'post_create' );
+        // verify user email
+        $this->route( WP_REST_Server::EDITABLE, '/verify/email', 'post_verify_email' );
+        // login user
+        $this->route( WP_REST_Server::EDITABLE, '/login', 'post_login' );
     }
 
     /**
@@ -62,12 +68,54 @@ class UserController extends Api
 
         try {
             $id = $this->user_model->create_user($params);
+
+
             return new WP_REST_Response( $id, 200);
         } catch (\Exception $e) {
             return new WP_REST_Response('failed to create user', 400);
         }
     }
 
+    /**
+     * verify email address 
+     * @method GET
+     */ 
+    public function post_verify_email() {
+        $params = $this->request->get_params();
+        $validation = $this->validator->validate($params, [
+            "user_id" => "required|numeric",
+            "code" => "required|numeric|digits:6",
+        ]);
+
+        if ($validation->fails()) {
+            $errors = $validation->errors();
+            return new WP_REST_Response([
+                'message' => 'Failed to verify email',
+                'errors' => $errors->firstOfAll()
+            ], 400);
+        }
+
+        $user = get_user_by('id', $params['user_id']);
+        if( !$user ) {
+            return new WP_REST_Response([
+                'message' => 'Failed to verify email',
+                'errors' => [
+                    'user_id' => 'User does not exists'
+                ]
+            ], 400);
+        }
+
+        if( $user->user_activation_key != $params['code'] ) {
+            return new WP_REST_Response([
+                'message' => 'Failed to verify email',
+                'errors' => [
+                    'code' => 'Code is incorrect'
+                ]
+            ], 400);
+        }
+
+        return new WP_REST_Response( 'Successfully verified email' , 200);
+    }
      /**
      * create user
      * @method POST
@@ -120,7 +168,7 @@ class UserController extends Api
 
         $data = UserModel::get_user_data($user->ID);
         $date = new \DateTimeImmutable();
-
+        // generate access JWT token
         $payload = [
             'iat' => $date->getTimestamp(),
             'iss' => $host,
@@ -129,9 +177,10 @@ class UserController extends Api
             'user_id' => $user->ID,
             'role' => $data['role'],
         ];
-
+        // send verification email
+        $this->mail->send($user->data->user_email, Template::account_creation_verification( $user->ID ) );
+        // assign token
         $data['access_token'] = JWT::encode($payload, Constants::$JWT_KEY, Constants::$JWT_ALGO);
-
         return new WP_REST_Response( $data, 200);
     }
 }

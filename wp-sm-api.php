@@ -15,6 +15,8 @@ use WP_SM_API\Model\UserModel;
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+// define plugin working directory
+define( 'WP_SM_API_DIR', plugin_dir_path( __FILE__ ) );
 
 // add autoload
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {

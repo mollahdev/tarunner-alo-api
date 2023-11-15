@@ -9,12 +9,14 @@
         "psr-4": {
             "WP_SM_API\\App\\": "app/",
             "WP_SM_API\\Model\\": "model/",
-            "WP_SM_API\\Controller\\": "controller/"
+            "WP_SM_API\\Controller\\": "controller/",
+            "WP_SM_API\\Providers\\Email\\": "providers/email/"
         }
     },
     "require": {
         "rakit/validation": "^1.4",
-        "firebase/php-jwt": "^6.9"
+        "firebase/php-jwt": "^6.9",
+        "phpmailer/phpmailer": "^6.8"
     },
     "config": {
         "platform": {

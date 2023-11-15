@@ -22,7 +22,7 @@ class ServiceController extends Api
     function manage_routes()
     {
         // get all students
-        $this->route( WP_REST_Server::READABLE, '/', 'get_services');
+        $this->route( WP_REST_Server::READABLE, '/', 'get_services', 'access_admin');
         // create service
         $this->route( WP_REST_Server::EDITABLE, '/', 'post_create_service', 'access_admin' );
     }
