@@ -1,5 +1,5 @@
 <?php 
-namespace WP_SM_API\Providers\Email;
+namespace Tarunner_Alo\Providers\Email;
 
 class Template {
     /**

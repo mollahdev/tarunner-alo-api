@@ -1,5 +1,5 @@
 <?php 
-namespace WP_SM_API\App;
+namespace Tarunner_Alo\App;
 
 class Constants {
     static $JWT_KEY = 'demo_temp_key';

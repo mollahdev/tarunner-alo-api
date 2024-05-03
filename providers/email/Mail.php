@@ -1,6 +1,6 @@
 <?php 
-namespace WP_SM_API\Providers\Email;
-use WP_SM_API\App\Singleton;
+namespace Tarunner_Alo\Providers\Email;
+use Tarunner_Alo\App\Singleton;
 
 class Mail extends Config{
     use Singleton;

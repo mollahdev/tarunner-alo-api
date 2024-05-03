@@ -1,14 +1,14 @@
 <?php 
-namespace WP_SM_API\Controller;
-use WP_SM_API\Model\UserModel;
-use WP_SM_API\App\Api;
+namespace Tarunner_Alo\Controller;
+use Tarunner_Alo\Model\UserModel;
+use Tarunner_Alo\App\Api;
 use WP_REST_Response;
 use WP_REST_Server;
-use WP_SM_API\App\Singleton;
-use WP_SM_API\App\Constants;
+use Tarunner_Alo\App\Singleton;
+use Tarunner_Alo\App\Constants;
 use Firebase\JWT\JWT;
-use WP_SM_API\Providers\Email\Mail;
-use WP_SM_API\Providers\Email\Template;
+use Tarunner_Alo\Providers\Email\Mail;
+use Tarunner_Alo\Providers\Email\Template;
 
 class UserController extends Api
 {
@@ -38,24 +38,23 @@ class UserController extends Api
     /**
      * create user
      * @method POST
-     * @example /wp-json/wp-sm-api/$prefix/register
+     * @example /wp-json/tarunner-alo-api/$prefix/register
      */ 
     public function post_create() {
         $params = $this->request->get_params();
+        $host = $this->request->get_header('host');
         $validation = $this->validator->validate($params + $_FILES, [
-            "role" => "required|in:admin,teacher,student,guardian",
-            "student_id" => "required_if:role,student",
-            "teacher_id" => "required_if:role,teacher",
-            "avatar" => "required_if:role,admin,guardian|uploaded_file|max:1M|mimes:jpeg,png,webp",
-            "first_name" => "required_if:role,admin,guardian",
-            "last_name" => "required_if:role,admin,guardian",
-            "email"=> "required_if:role,admin,guardian",
-            "password"=> "required",
-            "confirm_password"=> "required|same:password",
-            "gender"=> "required_if:role,admin,guardian|in:male,female",
-            "phone"=> "required_if:role,admin,guardian|numeric|digits:10",
-            "country_code" => "required_if:role,admin,guardian",
-            "date_of_birth"=> "required_if:role,admin,guardian|date:d-m-Y",
+            "role"          => "required|in:member,editor,admin",
+            "avatar"        => "required|uploaded_file|max:1M|mimes:jpeg,png,webp",
+            "first_name"    => "required",
+            "last_name"     => "required",
+            "password"      => "required",
+            "email"         => "required|email",
+            "confirm_password"  => "required|same:password",
+            "phone"             => "required|numeric|digits:10",
+            "country_code"      => "required|numeric|digits:3",
+            "date_of_birth"     => "required|date:d-m-Y",
+            "plan_id"           => "required|numeric",
         ]);
 
         if ($validation->fails()) {
@@ -67,17 +66,39 @@ class UserController extends Api
         }
 
         try {
-            $id = $this->user_model->create_user($params);
+            $response = $this->user_model->create_user($params);
+            $this->mail->send($response['email'], Template::account_creation_verification( $response['id'] ));
+            $response = UserModel::get_user_data($response['id']);
 
+            $date = new \DateTimeImmutable();
+            // generate access JWT token
+            $payload = [
+                'iat' => $date->getTimestamp(),
+                'iss' => $host,
+                'exp' => $date->modify('+1 day')->getTimestamp(),
+                'nbf' => $date->getTimestamp(),
+                'user_id' => $response['id'],
+                'role' => $response['role'],
+            ];
+            
+            // assign token
+            $response['access_token'] = JWT::encode($payload, Constants::$JWT_KEY, Constants::$JWT_ALGO);
 
-            return new WP_REST_Response( $id, 200);
+            return new WP_REST_Response( [
+                'message' => 'Registration successfully',
+                'data' => $response
+            ], 200);
+
         } catch (\Exception $e) {
-            return new WP_REST_Response('failed to create user', 400);
+            return new WP_REST_Response([
+                'message' => $e->getMessage(),
+                'errors' => []
+            ], 400);
         }
     }
 
     /**
-     * verify email address 
+     * verify email 
      * @method GET
      */ 
     public function post_verify_email() {
@@ -99,27 +120,29 @@ class UserController extends Api
         if( !$user ) {
             return new WP_REST_Response([
                 'message' => 'Failed to verify email',
-                'errors' => [
-                    'user_id' => 'User does not exists'
-                ]
+                'errors' => []
             ], 400);
         }
 
         if( $user->user_activation_key != $params['code'] ) {
             return new WP_REST_Response([
                 'message' => 'Failed to verify email',
-                'errors' => [
-                    'code' => 'Code is incorrect'
-                ]
+                'errors' => []
             ], 400);
         }
 
-        return new WP_REST_Response( 'Successfully verified email' , 200);
+        // update the user status
+        update_user_meta($user->ID, 'is_email_verified', 'yes');
+
+        return new WP_REST_Response( [
+            'message' => 'Email verified successfully',
+            'data' => []
+        ] , 200);
     }
      /**
      * create user
      * @method POST
-     * @example /wp-json/wp-sm-api/$prefix/login
+     * @example /wp-json/tarunner-alo-api/$prefix/login
      */ 
     public function post_login() {
         $params = $this->request->get_params();
@@ -138,7 +161,6 @@ class UserController extends Api
                 'errors' => $errors->firstOfAll()
             ], 400);
         }
-
         $email_or_username = $params['email'] ?? $params['username'];
         $user = null;
 
@@ -152,16 +174,17 @@ class UserController extends Api
             return new WP_REST_Response([
                 'message' => 'Failed to login',
                 'errors' => [
-                    'email' => 'Email or username does not exists'
+                    'email' => 'Invalid email or username',
                 ]
             ], 400);
         }
+
 
         if( !wp_check_password($params['password'], $user->data->user_pass, $user->ID) ) {
             return new WP_REST_Response([
                 'message' => 'Failed to login',
                 'errors' => [
-                    'password' => 'Password is incorrect'
+                    'password' => 'Invalid password',
                 ]
             ], 400);
         }
@@ -177,10 +200,12 @@ class UserController extends Api
             'user_id' => $user->ID,
             'role' => $data['role'],
         ];
-        // send verification email
-        $this->mail->send($user->data->user_email, Template::account_creation_verification( $user->ID ) );
+        
         // assign token
         $data['access_token'] = JWT::encode($payload, Constants::$JWT_KEY, Constants::$JWT_ALGO);
-        return new WP_REST_Response( $data, 200);
+        return new WP_REST_Response( [
+            'message' => 'Logged in successfully',
+            'data' => $data
+        ], 200);
     }
 }

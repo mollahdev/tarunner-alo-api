@@ -1,5 +1,5 @@
 <?php 
-namespace WP_SM_API\Providers\Email;
+namespace Tarunner_Alo\Providers\Email;
 
 //Import PHPMailer classes into the global namespace
 //These must be at the top of your script, not inside a function

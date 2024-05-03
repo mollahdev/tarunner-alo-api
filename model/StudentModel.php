@@ -1,6 +1,6 @@
 <?php 
-namespace WP_SM_API\Model;
-use WP_SM_API\App\Singleton;
+namespace Tarunner_Alo\Model;
+use Tarunner_Alo\App\Singleton;
 
 class StudentModel
 {

@@ -1,5 +1,5 @@
 <?php
-namespace WP_SM_API\App;
+namespace Tarunner_Alo\App;
 
 trait Singleton
 {

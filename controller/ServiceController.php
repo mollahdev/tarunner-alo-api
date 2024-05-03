@@ -1,10 +1,10 @@
 <?php 
-namespace WP_SM_API\Controller;
-use WP_SM_API\Model\ServiceModel;
-use WP_SM_API\App\Api;
+namespace Tarunner_Alo\Controller;
+use Tarunner_Alo\Model\ServiceModel;
+use Tarunner_Alo\App\Api;
 use WP_REST_Response;
 use WP_REST_Server;
-use WP_SM_API\App\Singleton;
+use Tarunner_Alo\App\Singleton;
 
 class ServiceController extends Api
 {
@@ -30,7 +30,7 @@ class ServiceController extends Api
     /**
      * get all students 
      * @method GET
-     * @example /wp-json/wp-sm-api/$namespace
+     * @example /wp-json/tarunner-alo-api/$namespace
      */ 
     function get_services() {
         $services = $this->service_model->get_all_services();
@@ -39,7 +39,7 @@ class ServiceController extends Api
     /**
      * create service
      * @method POST
-     * @example /wp-json/wp-sm-api/$namespace
+     * @example /wp-json/tarunner-alo-api/$namespace
      */ 
     public function post_create_service() {
         $params = $this->request->get_params();

@@ -1,8 +1,8 @@
 <?php 
-namespace WP_SM_API\Model;
+namespace Tarunner_Alo\Model;
 
 use WP_Error;
-use WP_SM_API\App\Singleton;
+use Tarunner_Alo\App\Singleton;
 
 class ServiceModel extends BaseModel
 {

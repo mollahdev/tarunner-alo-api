@@ -1,5 +1,5 @@
 <?php 
-namespace WP_SM_API\Model;
+namespace Tarunner_Alo\Model;
 
 abstract class BaseModel {
     abstract function get_post_type();

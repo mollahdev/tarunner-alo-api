@@ -1,13 +1,13 @@
 <?php
-namespace WP_SM_API;
-use WP_SM_API\Controller\StudentController;
-use WP_SM_API\Controller\ServiceController;
-use WP_SM_API\Controller\UserController;
-use WP_SM_API\Model\UserModel;
+namespace Tarunner_Alo;
+use Tarunner_Alo\Controller\StudentController;
+use Tarunner_Alo\Controller\ServiceController;
+use Tarunner_Alo\Controller\UserController;
+use Tarunner_Alo\Model\UserModel;
 
 /*
-* Plugin Name:       WP Student Management Api
-* Description:       A Student Management Plugin that provides with Api
+* Plugin Name:       Taruner Alo Api
+* Description:       This is a custom plugin for Taruner Alo Api
 * Version:           1.0.0
 * Requires at least: 6.0
 * Requires PHP:      7.4

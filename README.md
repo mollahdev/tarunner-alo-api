@@ -1,2 +1,2 @@
-# wp-sm-api
+# tarunner-alo-api
 WordPress Student Manager Api

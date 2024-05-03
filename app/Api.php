@@ -1,8 +1,7 @@
 <?php 
-namespace WP_SM_API\App;
+namespace Tarunner_Alo\App;
 
-use Error;
-use WP_SM_API\App\Constants;
+use Tarunner_Alo\App\Constants;
 use Rakit\Validation\Validator;
 use Firebase\JWT\Key;
 use Firebase\JWT\JWT;
@@ -27,7 +26,7 @@ abstract class Api {
         add_action(
             'rest_api_init', function () use ( $method, $route, $callback, $permission_callback ) {
                 register_rest_route(
-                    'wp-sm-api', 
+                    'tarunner-alo-api', 
                     $this->prefix . $route, 
                     [
                         'methods'             => $method,

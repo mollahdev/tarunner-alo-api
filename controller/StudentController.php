@@ -1,11 +1,11 @@
 <?php 
-namespace WP_SM_API\Controller;
-use WP_SM_API\Model\StudentModel;
+namespace Tarunner_Alo\Controller;
+use Tarunner_Alo\Model\StudentModel;
 use Rakit\Validation\Validator;
-use WP_SM_API\App\Api;
+use Tarunner_Alo\App\Api;
 use WP_REST_Response;
 use WP_REST_Server;
-use WP_SM_API\App\Singleton;
+use Tarunner_Alo\App\Singleton;
 use stdClass;
 
 class StudentController extends Api
@@ -33,7 +33,7 @@ class StudentController extends Api
     /**
      * get all students 
      * @method GET
-     * @example /wp-json/wp-sm-api/$namespace
+     * @example /wp-json/tarunner-alo-api/$namespace
      */ 
     public function get_students() {
         $posts = StudentModel::find();
@@ -43,7 +43,7 @@ class StudentController extends Api
      * get student details by id
      * @method GET
      * @param {int} $id
-     * @example /wp-json/wp-sm-api/$namespace/1 
+     * @example /wp-json/tarunner-alo-api/$namespace/1 
      */ 
     public function get_student() {
         $params = $this->request->get_params();
@@ -62,7 +62,7 @@ class StudentController extends Api
     /**
      * delete all students
      * @method DELETE
-     * @example /wp-json/wp-sm-api/$namespace
+     * @example /wp-json/tarunner-alo-api/$namespace
      */
     public function delete_students() {
         $posts = StudentModel::delete_all();
@@ -72,7 +72,7 @@ class StudentController extends Api
      * delete students by ids
      * @method POST
      * @param {array} $ids
-     * @example /wp-json/wp-sm-api/$namespace/delete
+     * @example /wp-json/tarunner-alo-api/$namespace/delete
      */
     public function post_delete_student() {
         $params = $this->request->get_params();
@@ -99,7 +99,7 @@ class StudentController extends Api
     /**
      * register a student
      * @method POST
-     * @example /wp-json/wp-sm-api/$namespace/register
+     * @example /wp-json/tarunner-alo-api/$namespace/register
     */
     public function post_register() {
         $params = $this->request->get_params();

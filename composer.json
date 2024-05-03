@@ -1,5 +1,5 @@
 {
-    "name": "ashraf/wp-sm-api",
+    "name": "ashraf/tarunner-alo-api",
     "scripts": {
         "build": [
             "composer --no-plugins --no-interaction install --no-scripts --no-dev"
@@ -7,10 +7,11 @@
     },
     "autoload": {
         "psr-4": {
-            "WP_SM_API\\App\\": "app/",
-            "WP_SM_API\\Model\\": "model/",
-            "WP_SM_API\\Controller\\": "controller/",
-            "WP_SM_API\\Providers\\Email\\": "providers/email/"
+            "Tarunner_Alo\\App\\": "app/",
+            "Tarunner_Alo\\Model\\": "model/",
+            "Tarunner_Alo\\Controller\\": "controller/",
+            "Tarunner_Alo\\Providers\\Sms\\": "providers/sms/",
+            "Tarunner_Alo\\Providers\\Email\\": "providers/email/"
         }
     },
     "require": {
