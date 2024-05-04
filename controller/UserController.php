@@ -33,6 +33,10 @@ class UserController extends Api
         $this->route( WP_REST_Server::EDITABLE, '/verify/email', 'post_verify_email' );
         // login user
         $this->route( WP_REST_Server::EDITABLE, '/login', 'post_login' );
+        // get user list
+        $this->route( WP_REST_Server::READABLE, '/list', 'get_list' );
+        // delete user by id
+        $this->route( WP_REST_Server::DELETABLE, '/delete/(?P<id>\d+)', 'delete_user' );
     }
 
     /**
@@ -207,5 +211,40 @@ class UserController extends Api
             'message' => 'Logged in successfully',
             'data' => $data
         ], 200);
+    }
+
+    public function get_list() {
+        $users = UserModel::get_all_users();
+        return new WP_REST_Response( [
+            'message' => 'User list',
+            'data' => $users
+        ], 200);
+    }
+
+    public function delete_user() {
+        $params = $this->request->get_params();
+        $validation = $this->validator->validate($params, [
+            'id' => 'required|numeric',
+        ]);
+
+        if ($validation->fails()) {
+            $errors = $validation->errors();
+            return new WP_REST_Response($errors->firstOfAll(), 400);
+        }
+
+        $id = $params['id'];
+        
+        try {
+            $user = UserModel::delete_user($id);
+            return new WP_REST_Response( [
+                'message' => 'User deleted successfully',
+                'data' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return new WP_REST_Response([
+                'message' => $e->getMessage(),
+                'errors' => []
+            ], 400);
+        }
     }
 }

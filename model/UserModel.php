@@ -8,8 +8,13 @@ use Exception;
 class UserModel extends BaseModel
 {
     use Singleton;
+    function __construct() {
+        // hook on deleting user
+        add_action('delete_user', [$this, 'on_delete_user']);
+    }
+
     function get_post_type() {
-        return 'wp_sm_api_user';
+        return 'tarunner_alo_user';
     }
     /**
      * create user
@@ -138,5 +143,54 @@ class UserModel extends BaseModel
         ];
 
         return $data;
+    }
+
+    static function get_all_users() {
+        $users = get_users([
+            'role__in' => ['member', 'editor', 'admin'],
+            'fields' => ['ID']
+        ]);
+
+        $data = [];
+        foreach ($users as $user) {
+            $data[] = self::get_user_data($user->ID);
+        }
+
+        return $data;
+    }
+
+    /**
+     * delete user
+     * @param int $id
+     */
+    public function on_delete_user( $id ) {
+        $user = get_user_by('id', $id);
+        if(!$user) {
+            return;
+        }
+
+        // delete avatar
+        $avatar = get_user_meta($id, 'avatar', true);
+        if($avatar) {
+            wp_delete_attachment($avatar, true);
+        }
+    }
+
+    /**
+     * delete user
+     * @param int $id
+     */
+    static function delete_user( $id ) {
+        $user = self::get_user_data($id);
+        if(!$user) {
+            throw new Exception('User not found');
+        }
+
+        $response = wp_delete_user($id);
+        if( is_wp_error($response) ) {
+            throw new Exception('Failed to delete user');
+        }
+
+        return $user;
     }
 }
