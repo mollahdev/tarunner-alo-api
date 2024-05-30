@@ -25,6 +25,13 @@ abstract class Api {
     protected function route( string $method, string $route = '/', $callback = null, $permission_callback = null ) {
         add_action(
             'rest_api_init', function () use ( $method, $route, $callback, $permission_callback ) {
+                
+                remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+                add_filter( 'rest_pre_serve_request', function( $value ) {
+                    header( 'Access-Control-Allow-Origin: *' );
+                    return $value;
+                });
+
                 register_rest_route(
                     'tarunner-alo-api', 
                     $this->prefix . $route, 

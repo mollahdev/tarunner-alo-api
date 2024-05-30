@@ -4,6 +4,7 @@ use Tarunner_Alo\Controller\StudentController;
 use Tarunner_Alo\Controller\ServiceController;
 use Tarunner_Alo\Controller\UserController;
 use Tarunner_Alo\Model\UserModel;
+use Tarunner_Alo\Controller\AppController;
 
 /*
 * Plugin Name:       Taruner Alo Api
@@ -33,6 +34,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     UserModel::create_roles();
 
     // init controllers
+    new AppController();
     new UserController();
     new StudentController();
     new ServiceController();
