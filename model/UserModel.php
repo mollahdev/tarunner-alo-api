@@ -66,6 +66,8 @@ class UserModel extends BaseModel
                 'is_phone_verified' => 'no',
                 'is_email_verified' => 'no',
                 'avatar'        => null,
+                'blood_group'   => $params['blood_group'],
+                'location'      => $params['location'],
                 'status'        => 'pending', // active, inactive, pending
             ] 
         ]);
@@ -139,6 +141,8 @@ class UserModel extends BaseModel
             'is_phone_verified' => get_user_meta($user->ID, 'is_phone_verified', true),
             'is_email_verified' => get_user_meta($user->ID, 'is_email_verified', true),
             'plan_id' => get_user_meta($user->ID, 'plan_id', true),
+            'blood_group' => get_user_meta($user->ID, 'blood_group', true),
+            'location' => get_user_meta($user->ID, 'location', true),
             'status' => get_user_meta($user->ID, 'status', true),
         ];
 

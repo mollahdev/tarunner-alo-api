@@ -52,13 +52,15 @@ class UserController extends Api
             "avatar"        => "required|uploaded_file|max:1M|mimes:jpeg,png,webp",
             "first_name"    => "required",
             "last_name"     => "required",
-            "password"      => "required",
             "email"         => "required|email",
+            "password"      => "required",
             "confirm_password"  => "required|same:password",
             "phone"             => "required|numeric|digits:10",
             "country_code"      => "required|numeric|digits:3",
             "date_of_birth"     => "required|date:d-m-Y",
             "plan_id"           => "required|numeric",
+            "blood_group"       => "required|in:A+,A-,B+,B-,O+,O-,AB+,AB-",
+            "location"          => "required",
         ]);
 
         if ($validation->fails()) {
